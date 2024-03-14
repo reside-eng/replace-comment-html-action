@@ -9,7 +9,7 @@
   "scripts": {
     "prepare": "husky install",
     "lint": "eslint src/**/*.ts",
-    "bundle": "ncc build src/index.ts -o dist --minify --license licenses.txt",
+    "build": "ncc build src/index.ts -o dist --minify --license licenses.txt",
     "check-types": "tsc --noEmit",
     "test": "echo 'No tests yet'",
     "format": "prettier --write .",
