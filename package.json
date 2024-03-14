@@ -12,8 +12,9 @@
     "build": "ncc build src/index.ts -o dist --minify --license licenses.txt",
     "check-types": "tsc --noEmit",
     "test": "echo 'No tests yet'",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:base": "prettier --ignore-path .eslintignore",
+    "format": "yarn format:base --write .",
+    "format:check": "yarn format:base --check ."
   },
   "dependencies": {
     "@actions/core": "^1.10.1",
@@ -46,5 +47,13 @@
     "typescript": "^5.3.3"
   },
   "packageManager": "yarn@4.1.1",
-  "prettier": "@side/prettier-config"
+  "prettier": "@side/prettier-config",
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --fix"
+    ],
+    "*.{js,jsx,ts,tsx,yaml,yml,json,html,css,md}": [
+      "yarn format:base --write"
+    ]
+  }
 }
