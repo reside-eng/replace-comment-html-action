@@ -1,0 +1,40 @@
+name: Verify
+
+on: [pull_request]
+
+env:
+  NODE_VERSION: 20.x
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Verify formatting
+        run: yarn format:check
+
+      - name: Lint
+        run: yarn lint
+
+      # - name: Test
+      #   run: yarn test --coverage --silent
+
+      # - name: Upload coverage to Coveralls
+      #   uses: coverallsapp/github-action@v2.2.1
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        run: yarn build

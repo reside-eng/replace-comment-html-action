@@ -15,7 +15,7 @@ inputs:
     description: The issue or pull request to operate on
     default: ${{ github.event.number || github.event.issue.number }}
   mode:
-    description: "Which strategy to use for modifying comments: upsert (default), create-only"
+    description: 'Which strategy to use for modifying comments: upsert (default), create-only'
     default: upsert
   html:
     description: HTML to create or update

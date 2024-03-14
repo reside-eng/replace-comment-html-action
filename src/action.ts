@@ -1,39 +1,91 @@
-import * as cheerio from "cheerio";
-import * as core from "@actions/core";
-import { createComment, findExistingComment, updateComment } from "./github.js";
+import * as cheerio from 'cheerio';
+import * as core from '@actions/core';
+import { createComment, findExistingComment, updateComment } from './github.js';
 
 const Mode = {
-  Upsert: "upsert",
-  CreateOnly: "create-only",
+  Upsert: 'upsert',
+  CreateOnly: 'create-only',
 };
 
-export async function action(params: {
+/**
+ * Handle updating/creating an element that is dependent on the presence
+ * of a parent element.
+ * @param params - Params object
+ * @param params.mode - Mode
+ * @param params.html - HTML content
+ * @param params.selector - Selector
+ * @param params.parentSelector - Parent selector
+ * @returns Promise which resolves after updating element
+ */
+async function handleDependentElement(params: {
   mode: string;
   html: string;
   selector: string;
-  parentSelector: string | null;
+  parentSelector: string;
 }) {
   const { mode, html, selector, parentSelector } = params;
+  core.debug('Dependent element');
 
-  if (parentSelector) {
-    return handleDependentElement({
-      mode,
-      html,
-      selector,
-      parentSelector,
-    });
+  const comment = await findExistingComment(parentSelector);
+
+  if (!comment) {
+    throw new Error(
+      `Could not find comment using parent selector: ${parentSelector}.`,
+    );
   }
 
-  return handleIndependentElement({
-    mode,
-    html,
-    selector,
-  });
+  if (!comment.body) {
+    // Note: This should never happen
+    throw new Error(`Could not find body in comment: ${comment.id}`);
+  }
+
+  const $ = cheerio.load(comment.body, null, false);
+  const $parent = $(parentSelector);
+  const $element = $parent.find(selector);
+
+  switch (mode) {
+    case Mode.CreateOnly: {
+      if ($element.length === 0) {
+        core.info(
+          `Element does not exist, creating and appending to parent "${parentSelector}"...`,
+        );
+        $parent.append(html);
+      } else {
+        core.info(
+          `Existing element at selector "${selector}" will not be updated – mode is ${Mode.CreateOnly}`,
+        );
+      }
+      break;
+    }
+    case Mode.Upsert: {
+      if ($element.length > 0) {
+        core.info(
+          `Existing element found at selector "${selector}", updating...`,
+        );
+        $element.replaceWith(html);
+      } else {
+        core.info(
+          `Element does not exist, creating and appending to parent "${parentSelector}"...`,
+        );
+        $parent.append(html);
+      }
+      break;
+    }
+    default: {
+      throw new Error(`Invalid mode: ${mode}`);
+    }
+  }
+
+  await updateComment(comment.id, $.html());
 }
 
 /**
  * Handle updating/creating an element that is not dependent on a parent
  * element.
+ * @param params - Params object
+ * @param params.mode - Mode
+ * @param params.html - HTML content
+ * @param params.selector - Selector
  */
 async function handleIndependentElement(params: {
   mode: string;
@@ -42,7 +94,7 @@ async function handleIndependentElement(params: {
 }) {
   const { mode, html, selector } = params;
 
-  core.debug("Independent element");
+  core.debug('Independent element');
 
   const comment = await findExistingComment(selector);
 
@@ -65,12 +117,12 @@ async function handleIndependentElement(params: {
       const $element = $(selector);
       if ($element.length > 0) {
         core.info(
-          `Existing element found at selector "${selector}", updating...`
+          `Existing element found at selector "${selector}", updating...`,
         );
         $element.replaceWith(html);
       } else {
         core.info(
-          `Element does not exist, creating and appending to comment root...`
+          'Element does not exist, creating and appending to comment root...',
         );
         $.root().append(html);
       }
@@ -79,9 +131,9 @@ async function handleIndependentElement(params: {
       break;
     }
     case Mode.CreateOnly: {
-      core.setOutput("comment-id", comment.id);
+      core.setOutput('comment-id', comment.id);
       core.info(
-        `Existing element ${selector} will not be updated since mode is ${Mode.CreateOnly}`
+        `Existing element ${selector} will not be updated since mode is ${Mode.CreateOnly}`,
       );
       break;
     }
@@ -92,67 +144,34 @@ async function handleIndependentElement(params: {
 }
 
 /**
- * Handle updating/creating an element that is dependent on the presence
- * of a parent element.
+ *
+ * @param params - Params object
+ * @param params.mode - Mode
+ * @param params.html - HTML content
+ * @param params.selector - Selector
+ * @param params.parentSelector - Parent selector
+ * @returns Promise which resolves after updating element
  */
-async function handleDependentElement(params: {
+export async function action(params: {
   mode: string;
   html: string;
   selector: string;
-  parentSelector: string;
+  parentSelector: string | null;
 }) {
   const { mode, html, selector, parentSelector } = params;
-  core.debug("Dependent element");
 
-  const comment = await findExistingComment(parentSelector);
-
-  if (!comment) {
-    throw new Error(
-      `Could not find comment using parent selector: ${parentSelector}.`
-    );
+  if (parentSelector) {
+    return handleDependentElement({
+      mode,
+      html,
+      selector,
+      parentSelector,
+    });
   }
 
-  if (!comment.body) {
-    // Note: This should never happen
-    throw new Error(`Could not find body in comment: ${comment.id}`);
-  }
-
-  const $ = cheerio.load(comment.body, null, false);
-  const $parent = $(parentSelector);
-  const $element = $parent.find(selector);
-
-  switch (mode) {
-    case Mode.CreateOnly: {
-      if ($element.length === 0) {
-        core.info(
-          `Element does not exist, creating and appending to parent "${parentSelector}"...`
-        );
-        $parent.append(html);
-      } else {
-        core.info(
-          `Existing element at selector "${selector}" will not be updated – mode is ${Mode.CreateOnly}`
-        );
-      }
-      break;
-    }
-    case Mode.Upsert: {
-      if ($element.length > 0) {
-        core.info(
-          `Existing element found at selector "${selector}", updating...`
-        );
-        $element.replaceWith(html);
-      } else {
-        core.info(
-          `Element does not exist, creating and appending to parent "${parentSelector}"...`
-        );
-        $parent.append(html);
-      }
-      break;
-    }
-    default: {
-      throw new Error(`Invalid mode: ${mode}`);
-    }
-  }
-
-  await updateComment(comment.id, $.html());
+  return handleIndependentElement({
+    mode,
+    html,
+    selector,
+  });
 }
