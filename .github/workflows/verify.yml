@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
@@ -38,20 +38,3 @@ jobs:
 
       - name: Build
         run: yarn build
-
-  notification:
-    if: always()
-    name: notification
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - uses: technote-space/workflow-conclusion-action@v3.0.3
-
-      - uses: reside-eng/workflow-status-notification-action@v1.2.4
-        with:
-          current-status: ${{ env.WORKFLOW_CONCLUSION }}
-          slack-webhook: ${{ secrets.SLACK_WEBHOOK_PLATFORM_PROD }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
