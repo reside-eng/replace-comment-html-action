@@ -26,7 +26,7 @@ jobs:
       - uses: reside-eng/replace-comment-html-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          selector: "#preview-links"
+          selector: '#preview-links'
           mode: create-only # This will create the table if it doesn't exist
           html: |
             <table id="preview-links">
@@ -44,8 +44,8 @@ jobs:
       - uses: htunnicliff/replace-comment-html@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          parent-selector: "#preview-links tbody" # Append this row to the <tbody>
-          selector: "tr#preview-link-${{ matrix.env }}"
+          parent-selector: '#preview-links tbody' # Append this row to the <tbody>
+          selector: 'tr#preview-link-${{ matrix.env }}'
           mode: upsert # This will update the row if it exists, or create it if it doesn't
           html: |
             <tr id="preview-link-${{ matrix.env }}">

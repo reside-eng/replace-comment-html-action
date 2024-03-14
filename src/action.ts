@@ -7,7 +7,6 @@ const Mode = {
   CreateOnly: 'create-only',
 };
 
-
 /**
  * Handle updating/creating an element that is dependent on the presence
  * of a parent element.
@@ -31,7 +30,7 @@ async function handleDependentElement(params: {
 
   if (!comment) {
     throw new Error(
-      `Could not find comment using parent selector: ${parentSelector}.`
+      `Could not find comment using parent selector: ${parentSelector}.`,
     );
   }
 
@@ -48,12 +47,12 @@ async function handleDependentElement(params: {
     case Mode.CreateOnly: {
       if ($element.length === 0) {
         core.info(
-          `Element does not exist, creating and appending to parent "${parentSelector}"...`
+          `Element does not exist, creating and appending to parent "${parentSelector}"...`,
         );
         $parent.append(html);
       } else {
         core.info(
-          `Existing element at selector "${selector}" will not be updated – mode is ${Mode.CreateOnly}`
+          `Existing element at selector "${selector}" will not be updated – mode is ${Mode.CreateOnly}`,
         );
       }
       break;
@@ -61,12 +60,12 @@ async function handleDependentElement(params: {
     case Mode.Upsert: {
       if ($element.length > 0) {
         core.info(
-          `Existing element found at selector "${selector}", updating...`
+          `Existing element found at selector "${selector}", updating...`,
         );
         $element.replaceWith(html);
       } else {
         core.info(
-          `Element does not exist, creating and appending to parent "${parentSelector}"...`
+          `Element does not exist, creating and appending to parent "${parentSelector}"...`,
         );
         $parent.append(html);
       }
@@ -118,12 +117,12 @@ async function handleIndependentElement(params: {
       const $element = $(selector);
       if ($element.length > 0) {
         core.info(
-          `Existing element found at selector "${selector}", updating...`
+          `Existing element found at selector "${selector}", updating...`,
         );
         $element.replaceWith(html);
       } else {
         core.info(
-          'Element does not exist, creating and appending to comment root...'
+          'Element does not exist, creating and appending to comment root...',
         );
         $.root().append(html);
       }
@@ -134,7 +133,7 @@ async function handleIndependentElement(params: {
     case Mode.CreateOnly: {
       core.setOutput('comment-id', comment.id);
       core.info(
-        `Existing element ${selector} will not be updated since mode is ${Mode.CreateOnly}`
+        `Existing element ${selector} will not be updated since mode is ${Mode.CreateOnly}`,
       );
       break;
     }

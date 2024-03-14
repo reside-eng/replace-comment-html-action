@@ -10,6 +10,6 @@ try {
   });
 } catch (error) {
   core.setFailed(
-    error instanceof Error ? error.message : 'An unknown error occurred'
+    error instanceof Error ? error.message : 'An unknown error occurred',
   );
 }

@@ -39,12 +39,12 @@ export async function findExistingComment(selector: string) {
       }
 
       return data;
-    }
+    },
   );
 
   if (comments.length > 1) {
     warning(
-      `Found ${comments.length} comments with the same element selector: ${selector}. Using first comment.`
+      `Found ${comments.length} comments with the same element selector: ${selector}. Using first comment.`,
     );
   }
 
