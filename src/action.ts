@@ -78,15 +78,22 @@ function reorderTableRows($: cheerio.CheerioAPI, $tbody: cheerio.Cheerio<any>) {
         if (index === 0) {
           // First row of the group: modify the first td to show only environment with rowspan
           // and add a new td for service name
-          $firstTd.attr('rowspan', rowCount.toString());
-          $firstTd.text(`\n    ${environment}\n  `);
+          if ($firstTd.attr('rowspan')) {
+            // Environment td already exists in this row, update it
+            $firstTd.attr('rowspan', rowCount.toString());
+          } else {
+            // Environment td doesn't exist in this row, add it
+            $row.prepend(`<td rowspan="${rowCount}">\n    ${environment}\n  </td>`)
+          }
           
           // Insert service name td after environment td
-          $firstTd.after(`<td>\n    ${rowData.serviceName}\n  </td>`);
-          core.debug(`First row of ${environment}: added rowspan=${rowCount}`);
+          // $firstTd.after(`<td>\n    ${rowData.serviceName}\n  </td>`);
+          // core.debug(`First row of ${environment}: added rowspan=${rowCount}`);
         } else {
-          // For subsequent rows: replace the first td content with service name only
-          $firstTd.text(`\n    ${rowData.serviceName}\n  `);
+          // For subsequent rows: if the first td contains a rowspan (env element), remove it
+          if ($firstTd.attr('rowspan')) {
+            $firstTd.remove();
+          }
         }
 
         // Append the row to tbody
