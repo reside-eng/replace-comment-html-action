@@ -170,6 +170,9 @@ async function handleDependentElement(params: {
     }
   }
 
+  core.debug(`Parent: ${$parent}`);
+  core.debug(`ParentSelector: ${parentSelector}`);
+  
   // Reorder and group table rows by environment and service name
   reorderTableRows($, $parent);
 
@@ -226,6 +229,9 @@ async function handleIndependentElement(params: {
 
       // Reorder and group table rows by environment and service name
       const $table = $(selector);
+      core.debug(`Selector: ${selector}`);
+      core.debug(`Table: ${$table}`);
+      core.debug(`Table length: ${$table.length}`);
       if ($table.length > 0) {
         reorderTableRows($, $table);
       }
