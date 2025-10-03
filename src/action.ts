@@ -76,6 +76,80 @@ async function handleDependentElement(params: {
     }
   }
 
+  // Reorder and group table rows by environment and service name
+  const $tbody = $parent.find('tbody');
+  const $rows = $tbody.find('tr');
+
+  if ($rows.length > 0) {
+    // Extract environment and service from each row's id
+    interface RowData {
+      element: cheerio.Cheerio<any>;
+      environment: string;
+      serviceName: string;
+    }
+
+    const rowsData: RowData[] = [];
+    $rows.each((_, row) => {
+      const $row = $(row);
+      const id = $row.attr('id');
+      
+      if (id && id.startsWith('preview-link-')) {
+        // Parse id format: preview-link-<environment>-<service-name>
+        const parts = id.replace('preview-link-', '').split('-');
+        if (parts.length >= 2) {
+          const environment = parts[0];
+          const serviceName = parts.slice(1).join('-');
+          rowsData.push({ element: $row, environment, serviceName });
+        }
+      }
+    });
+
+    // Sort by environment first, then by service name
+    rowsData.sort((a, b) => {
+      if (a.environment !== b.environment) {
+        return a.environment.localeCompare(b.environment);
+      }
+      return a.serviceName.localeCompare(b.serviceName);
+    });
+
+    // Group by environment
+    const groupedByEnv = new Map<string, RowData[]>();
+    for (const rowData of rowsData) {
+      if (!groupedByEnv.has(rowData.environment)) {
+        groupedByEnv.set(rowData.environment, []);
+      }
+      groupedByEnv.get(rowData.environment)!.push(rowData);
+    }
+
+    // Clear tbody and rebuild with sorted rows
+    $tbody.empty();
+
+    for (const [environment, rows] of Array.from(groupedByEnv.entries())) {
+      const rowCount = rows.length;
+
+      rows.forEach((rowData, index) => {
+        const $row = rowData.element;
+        const $firstTd = $row.find('td').first();
+        
+        if (index === 0) {
+          // First row of the group: modify the first td to show only environment with rowspan
+          // and add a new td for service name
+          $firstTd.attr('rowspan', rowCount.toString());
+          $firstTd.text(`\n    ${environment}\n  `);
+          
+          // Insert service name td after environment td
+          $firstTd.after(`<td>\n    ${rowData.serviceName}\n  </td>`);
+        } else {
+          // For subsequent rows: replace the first td content with service name only
+          $firstTd.text(`\n    ${rowData.serviceName}\n  `);
+        }
+
+        // Append the row to tbody
+        $tbody.append($row);
+      });
+    }
+  }
+
   await updateComment(comment.id, $.html());
 }
 
