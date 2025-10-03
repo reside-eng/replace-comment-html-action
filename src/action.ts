@@ -8,12 +8,11 @@ const Mode = {
 };
 
 /**
- * Reorder and group table rows by environment and service name
+ * Reorder and group tbody rows by environment and service name
  * @param $ - Cheerio instance
- * @param $table - Table element containing tbody with rows to reorder
+ * @param $tbody - Tbody element containing rows to reorder
  */
-function reorderTableRows($: cheerio.CheerioAPI, $table: cheerio.Cheerio<any>) {
-  const $tbody = $table.find('tbody');
+function reorderTableRows($: cheerio.CheerioAPI, $tbody: cheerio.Cheerio<any>) {
   const $rows = $tbody.find('tr');
 
   core.debug(`Starting table reordering - found ${$rows.length} rows`);
@@ -94,6 +93,9 @@ function reorderTableRows($: cheerio.CheerioAPI, $table: cheerio.Cheerio<any>) {
         $tbody.append($row);
       });
     }
+
+    core.debug(`Reordered ${rowsData.length} rows`);
+    core.debug(`New tbody: ${$tbody.html()}`);
 
     core.debug('Table reordering completed');
   } else {
@@ -229,11 +231,11 @@ async function handleIndependentElement(params: {
 
       // Reorder and group table rows by environment and service name
       const $table = $(selector);
-      core.debug(`Selector: ${selector}`);
-      core.debug(`Table: ${$table}`);
-      core.debug(`Table length: ${$table.length}`);
-      if ($table.length > 0) {
-        reorderTableRows($, $table);
+      const $tbody = $table.find('tbody');
+      core.debug(`Tbody: ${$tbody}`);
+      core.debug(`Tbody length: ${$tbody.length}`);
+      if ($tbody.length > 0) {
+        reorderTableRows($, $tbody);
       }
 
       await updateComment(comment.id, $.html());
