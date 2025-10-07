@@ -12,7 +12,10 @@ const Mode = {
  * @param $ - Cheerio instance
  * @param $tbody - Tbody element containing rows to reorder
  */
-function reorderTableRows($: cheerio.CheerioAPI, $tbody: cheerio.Cheerio<any>) {
+function reorderTableRows(
+  $: cheerio.CheerioAPI,
+  $tbody: cheerio.Cheerio<cheerio.AnyNode>,
+) {
   const $rows = $tbody.find('tr');
 
   core.debug(`Starting table reordering - found ${$rows.length} rows`);
@@ -20,7 +23,7 @@ function reorderTableRows($: cheerio.CheerioAPI, $tbody: cheerio.Cheerio<any>) {
   if ($rows.length > 0) {
     // Extract environment and service from each row's id
     interface RowData {
-      element: cheerio.Cheerio<any>;
+      element: cheerio.Cheerio<cheerio.Element>;
       environment: string;
       serviceName: string;
     }
@@ -95,11 +98,9 @@ function reorderTableRows($: cheerio.CheerioAPI, $tbody: cheerio.Cheerio<any>) {
           // Insert service name td after environment td
           // $firstTd.after(`<td>\n    ${rowData.serviceName}\n  </td>`);
           // core.debug(`First row of ${environment}: added rowspan=${rowCount}`);
-        } else {
+        } else if ($firstTd.attr('rowspan')) {
           // For subsequent rows: if the first td contains a rowspan (env element), remove it
-          if ($firstTd.attr('rowspan')) {
-            $firstTd.remove();
-          }
+          $firstTd.remove();
         }
 
         // Append the row to tbody
