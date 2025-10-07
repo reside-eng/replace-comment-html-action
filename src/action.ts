@@ -29,7 +29,7 @@ function reorderTableRows($: cheerio.CheerioAPI, $tbody: cheerio.Cheerio<any>) {
     $rows.each((_, row) => {
       const $row = $(row);
       const id = $row.attr('id');
-      
+
       if (id && id.startsWith('preview-link-')) {
         // Parse id format: preview-link-<environment>-<service-name>
         const parts = id.replace('preview-link-', '').split('-');
@@ -37,7 +37,9 @@ function reorderTableRows($: cheerio.CheerioAPI, $tbody: cheerio.Cheerio<any>) {
           const environment = parts[0];
           const serviceName = parts.slice(1).join('-');
           rowsData.push({ element: $row, environment, serviceName });
-          core.debug(`Parsed row: env="${environment}", service="${serviceName}"`);
+          core.debug(
+            `Parsed row: env="${environment}", service="${serviceName}"`,
+          );
         }
       }
     });
@@ -68,13 +70,15 @@ function reorderTableRows($: cheerio.CheerioAPI, $tbody: cheerio.Cheerio<any>) {
 
     for (const [environment, rows] of Array.from(groupedByEnv.entries())) {
       const rowCount = rows.length;
-      const serviceNames = rows.map(r => r.serviceName).join(', ');
-      core.debug(`Environment "${environment}": ${rowCount} services [${serviceNames}]`);
+      const serviceNames = rows.map((r) => r.serviceName).join(', ');
+      core.debug(
+        `Environment "${environment}": ${rowCount} services [${serviceNames}]`,
+      );
 
       rows.forEach((rowData, index) => {
         const $row = rowData.element;
         const $firstTd = $row.find('td').first();
-        
+
         if (index === 0) {
           // First row of the group: modify the first td to show only environment with rowspan
           // and add a new td for service name
@@ -83,9 +87,11 @@ function reorderTableRows($: cheerio.CheerioAPI, $tbody: cheerio.Cheerio<any>) {
             $firstTd.attr('rowspan', rowCount.toString());
           } else {
             // Environment td doesn't exist in this row, add it
-            $row.prepend(`<td rowspan="${rowCount}">\n    ${environment}\n  </td>`)
+            $row.prepend(
+              `<td rowspan="${rowCount}">\n    ${environment}\n  </td>`,
+            );
           }
-          
+
           // Insert service name td after environment td
           // $firstTd.after(`<td>\n    ${rowData.serviceName}\n  </td>`);
           // core.debug(`First row of ${environment}: added rowspan=${rowCount}`);
@@ -181,7 +187,7 @@ async function handleDependentElement(params: {
 
   core.debug(`Parent: ${$parent}`);
   core.debug(`ParentSelector: ${parentSelector}`);
-  
+
   // Reorder and group table rows by environment and service name
   reorderTableRows($, $parent);
 
