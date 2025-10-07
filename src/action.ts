@@ -72,7 +72,7 @@ function reorderTableRows(
         const $firstTd = $row.find('td').first();
 
         if (index === 0) {
-          // First row of the group: 
+          // First row of the group:
           // - Add environment (if doesn't exist)
           // - Add/Update rowspan value with number of rows
           if ($firstTd.attr('rowspan')) {
@@ -225,7 +225,7 @@ async function handleIndependentElement(params: {
       // Reorder and group table rows by environment and service name
       const $table = $(selector);
       const $tbody = $table.find('tbody');
-      
+
       if ($tbody.length > 0) {
         reorderTableRows($, $tbody);
       }
