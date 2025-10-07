@@ -40,14 +40,9 @@ function reorderTableRows(
           const environment = parts[0];
           const serviceName = parts.slice(1).join('-');
           rowsData.push({ element: $row, environment, serviceName });
-          core.debug(
-            `Parsed row: env="${environment}", service="${serviceName}"`,
-          );
         }
       }
     });
-
-    core.debug(`Parsed ${rowsData.length} valid rows`);
 
     // Sort by environment first, then by service name
     rowsData.sort((a, b) => {
@@ -66,25 +61,20 @@ function reorderTableRows(
       groupedByEnv.get(rowData.environment)!.push(rowData);
     }
 
-    core.debug(`Grouped into ${groupedByEnv.size} environments`);
-
     // Clear tbody and rebuild with sorted rows
     $tbody.empty();
 
     for (const [environment, rows] of Array.from(groupedByEnv.entries())) {
       const rowCount = rows.length;
-      const serviceNames = rows.map((r) => r.serviceName).join(', ');
-      core.debug(
-        `Environment "${environment}": ${rowCount} services [${serviceNames}]`,
-      );
 
       rows.forEach((rowData, index) => {
         const $row = rowData.element;
         const $firstTd = $row.find('td').first();
 
         if (index === 0) {
-          // First row of the group: modify the first td to show only environment with rowspan
-          // and add a new td for service name
+          // First row of the group: 
+          // - Add environment (if doesn't exist)
+          // - Add/Update rowspan value with number of rows
           if ($firstTd.attr('rowspan')) {
             // Environment td already exists in this row, update it
             $firstTd.attr('rowspan', rowCount.toString());
@@ -94,10 +84,6 @@ function reorderTableRows(
               `<td rowspan="${rowCount}">\n    ${environment}\n  </td>`,
             );
           }
-
-          // Insert service name td after environment td
-          // $firstTd.after(`<td>\n    ${rowData.serviceName}\n  </td>`);
-          // core.debug(`First row of ${environment}: added rowspan=${rowCount}`);
         } else if ($firstTd.attr('rowspan')) {
           // For subsequent rows: if the first td contains a rowspan (env element), remove it
           $firstTd.remove();
@@ -107,10 +93,6 @@ function reorderTableRows(
         $tbody.append($row);
       });
     }
-
-    core.debug(`Reordered ${rowsData.length} rows`);
-    core.debug(`New tbody: ${$tbody.html()}`);
-
     core.debug('Table reordering completed');
   } else {
     core.debug('No rows found to reorder');
@@ -186,9 +168,6 @@ async function handleDependentElement(params: {
     }
   }
 
-  core.debug(`Parent: ${$parent}`);
-  core.debug(`ParentSelector: ${parentSelector}`);
-
   // Reorder and group table rows by environment and service name
   reorderTableRows($, $parent);
 
@@ -246,8 +225,7 @@ async function handleIndependentElement(params: {
       // Reorder and group table rows by environment and service name
       const $table = $(selector);
       const $tbody = $table.find('tbody');
-      core.debug(`Tbody: ${$tbody}`);
-      core.debug(`Tbody length: ${$tbody.length}`);
+      
       if ($tbody.length > 0) {
         reorderTableRows($, $tbody);
       }
