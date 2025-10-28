@@ -8,6 +8,98 @@ const Mode = {
 };
 
 /**
+ * Reorder and group tbody rows by environment and service name
+ * @param $ - Cheerio instance
+ * @param $tbody - Tbody element containing rows to reorder
+ */
+function reorderTableRows(
+  $: cheerio.CheerioAPI,
+  $tbody: cheerio.Cheerio<cheerio.AnyNode>,
+) {
+  const $rows = $tbody.find('tr');
+
+  core.debug(`Starting table reordering - found ${$rows.length} rows`);
+
+  if ($rows.length > 0) {
+    // Extract environment and service from each row's id
+    interface RowData {
+      element: cheerio.Cheerio<cheerio.Element>;
+      environment: string;
+      serviceName: string;
+    }
+
+    const rowsData: RowData[] = [];
+    $rows.each((_, row) => {
+      const $row = $(row);
+      const id = $row.attr('id');
+
+      if (id && id.startsWith('preview-link-')) {
+        // Parse id format: preview-link-<environment>-<service-name>
+        const parts = id.replace('preview-link-', '').split('-');
+        if (parts.length >= 2) {
+          const environment = parts[0];
+          const serviceName = parts.slice(1).join('-');
+          rowsData.push({ element: $row, environment, serviceName });
+        }
+      }
+    });
+
+    // Sort by environment first, then by service name
+    rowsData.sort((a, b) => {
+      if (a.environment !== b.environment) {
+        return a.environment.localeCompare(b.environment);
+      }
+      return a.serviceName.localeCompare(b.serviceName);
+    });
+
+    // Group by environment
+    const groupedByEnv = new Map<string, RowData[]>();
+    for (const rowData of rowsData) {
+      if (!groupedByEnv.has(rowData.environment)) {
+        groupedByEnv.set(rowData.environment, []);
+      }
+      groupedByEnv.get(rowData.environment)!.push(rowData);
+    }
+
+    // Clear tbody and rebuild with sorted rows
+    $tbody.empty();
+
+    for (const [environment, rows] of Array.from(groupedByEnv.entries())) {
+      const rowCount = rows.length;
+
+      rows.forEach((rowData, index) => {
+        const $row = rowData.element;
+        const $firstTd = $row.find('td').first();
+
+        if (index === 0) {
+          // First row of the group:
+          // - Add environment (if doesn't exist)
+          // - Add/Update rowspan value with number of rows
+          if ($firstTd.attr('rowspan')) {
+            // Environment td already exists in this row, update it
+            $firstTd.attr('rowspan', rowCount.toString());
+          } else {
+            // Environment td doesn't exist in this row, add it
+            $row.prepend(
+              `<td rowspan="${rowCount}">\n    ${environment}\n  </td>`,
+            );
+          }
+        } else if ($firstTd.attr('rowspan')) {
+          // For subsequent rows: if the first td contains a rowspan (env element), remove it
+          $firstTd.remove();
+        }
+
+        // Append the row to tbody
+        $tbody.append($row);
+      });
+    }
+    core.debug('Table reordering completed');
+  } else {
+    core.debug('No rows found to reorder');
+  }
+}
+
+/**
  * Handle updating/creating an element that is dependent on the presence
  * of a parent element.
  * @param params - Params object
@@ -76,6 +168,9 @@ async function handleDependentElement(params: {
     }
   }
 
+  // Reorder and group table rows by environment and service name
+  reorderTableRows($, $parent);
+
   await updateComment(comment.id, $.html());
 }
 
@@ -125,6 +220,14 @@ async function handleIndependentElement(params: {
           'Element does not exist, creating and appending to comment root...',
         );
         $.root().append(html);
+      }
+
+      // Reorder and group table rows by environment and service name
+      const $table = $(selector);
+      const $tbody = $table.find('tbody');
+
+      if ($tbody.length > 0) {
+        reorderTableRows($, $tbody);
       }
 
       await updateComment(comment.id, $.html());
