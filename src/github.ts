@@ -38,7 +38,7 @@ export async function findExistingComment(selector: string) {
         return [comment];
       }
 
-      return data;
+      return [];
     },
   );
 
