@@ -3,5 +3,13 @@
   "extends": [
     "github>reside-eng/renovate-config:library",
     ":reviewer(team:platform-tools)"
+  ],
+  "packageRules": [
+    {
+      "description": "Pin third-party GitHub Action digests (SHA + version comment). Excludes reside-eng first-party actions/workflows which stay on floating major tags.",
+      "matchDepTypes": ["action"],
+      "matchPackageNames": ["!/^reside-eng\\//"],
+      "pinDigests": true
+    }
   ]
 }
