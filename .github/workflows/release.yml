@@ -52,7 +52,7 @@ jobs:
       #   run: yarn test --coverage --silent
 
       # - name: Upload coverage to Coveralls
-      #   uses: coverallsapp/github-action@v2.2.1
+      #   uses: coverallsapp/github-action@95b1a2355bd0e526ad2fd62da9fd386ad4c98474 # v2.2.1
       #   with:
       #     github-token: ${{ secrets.GITHUB_TOKEN }}
 
