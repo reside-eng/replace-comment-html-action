@@ -1,0 +1,12 @@
+name: PR code Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  code-review:
+    uses: reside-eng/workflow-templates/.github/workflows/code-review.yml@v12
+    secrets: inherit
