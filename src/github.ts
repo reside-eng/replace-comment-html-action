@@ -1,7 +1,7 @@
+import { inspect } from 'node:util';
 import { debug, getInput, info, setOutput, warning } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import * as cheerio from 'cheerio';
-import { inspect } from 'node:util';
 
 const octokit = getOctokit(getInput('token'));
 const [owner, repo] = getInput('repository').split('/');
