@@ -1,5 +1,5 @@
-import * as cheerio from 'cheerio';
 import * as core from '@actions/core';
+import * as cheerio from 'cheerio';
 import { createComment, findExistingComment, updateComment } from './github.js';
 
 const Mode = {
@@ -33,7 +33,7 @@ function reorderTableRows(
       const $row = $(row);
       const id = $row.attr('id');
 
-      if (id && id.startsWith('preview-link-')) {
+      if (id?.startsWith('preview-link-')) {
         // Parse id format: preview-link-<environment>-<service-name>
         const parts = id.replace('preview-link-', '').split('-');
         if (parts.length >= 2) {
@@ -58,7 +58,7 @@ function reorderTableRows(
       if (!groupedByEnv.has(rowData.environment)) {
         groupedByEnv.set(rowData.environment, []);
       }
-      groupedByEnv.get(rowData.environment)!.push(rowData);
+      groupedByEnv.get(rowData.environment)?.push(rowData);
     }
 
     // Clear tbody and rebuild with sorted rows
@@ -255,7 +255,7 @@ async function handleIndependentElement(params: {
  * @param params.parentSelector - Parent selector
  * @returns Promise which resolves after updating element
  */
-export async function action(params: {
+export function action(params: {
   mode: string;
   html: string;
   selector: string;

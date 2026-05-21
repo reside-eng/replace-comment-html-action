@@ -3,7 +3,7 @@ name: Verify
 on: [pull_request]
 
 env:
-  NODE_VERSION: 20.x
+  NODE_VERSION: 24.x
 
 jobs:
   build:
@@ -20,21 +20,16 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
-      - name: Verify formatting
-        run: yarn format:check
+      - name: Check
+        run: yarn check
 
-      - name: Lint
-        run: yarn lint
+      - name: Type check
+        run: yarn types:check
 
-      # - name: Test
-      #   run: yarn test --coverage --silent
-
-      # - name: Upload coverage to Coveralls
-      #   uses: coverallsapp/github-action@95b1a2355bd0e526ad2fd62da9fd386ad4c98474 # v2.2.1
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Test
+        run: yarn test:cov
 
       - name: Build
         run: yarn build

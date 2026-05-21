@@ -6,3 +6,17 @@ node_modules
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# coverage + build artifacts
+coverage
+dist
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+
+# claude code worktrees (created on demand, not tracked)
+.claude/worktrees/
+.claude/memory
+.claude/projects
+.claude/settings.local.json
