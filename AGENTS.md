@@ -27,4 +27,4 @@ yarn build              # rimraf dist/ && node build.mjs (esbuild → dist/index
 - Conventional Commits via commitlint (`commit-msg` hook). Use `feat!:` or a `BREAKING CHANGE:` footer to trigger a semantic-release major bump.
 - Pre-commit auto-restages Biome fixes and runs `tsc --noEmit`. Never `--no-verify` — fix the underlying issue.
 - Relative imports use the `.js` extension; Node built-ins use the `node:` protocol.
-- `dist/` is gitignored on `main`. The release workflow rebuilds `dist/index.mjs` and force-commits it to the `v<major>` branch on each release — do not edit `dist/` by hand.
+- `dist/` is gitignored on `main`. The release workflow rebuilds `dist/index.mjs` and force-adds it to the floating major tag (`refs/tags/v<major>`) on each release, so `@vN` resolves a runnable bundle — do not edit `dist/` by hand. Full-version tags (`vX.Y.Z`) do **not** carry `dist/`; always consume via `@vN`.
