@@ -8,5 +8,5 @@ on:
 
 jobs:
   code-review:
-    uses: reside-eng/workflow-templates/.github/workflows/code-review.yml@v12
+    uses: reside-eng/workflow-templates-library/.github/workflows/code-review.yml@v1
     secrets: inherit
