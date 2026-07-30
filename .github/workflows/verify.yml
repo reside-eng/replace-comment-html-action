@@ -1,6 +1,13 @@
 name: Verify
 
-on: [pull_request]
+on:
+  pull_request:
+  merge_group:
+    types: [checks_requested]
+
+concurrency:
+  group: verify-${{ github.event_name == 'merge_group' && github.ref || github.head_ref }}
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 env:
   NODE_VERSION: 24.x
@@ -10,31 +17,59 @@ jobs:
     name: build
     runs-on: ubuntu-latest
     steps:
+      - name: Prepare environment
+        id: prepare-env
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "merge_group" ]; then
+            echo "IN_MERGE_QUEUE=true" >> $GITHUB_ENV
+            temp_name=${GITHUB_REF_NAME#gh-readonly-queue/main/pr-}
+            pr_number="${temp_name%-*}"
+            echo "PR_NUMBER=${pr_number}" >> $GITHUB_ENV
+          else
+            echo "IN_MERGE_QUEUE=false" >> $GITHUB_ENV
+            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          fi
+
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      # Skip decision at step level so the required 'build' context always reports
+      - name: Check if PR already up-to-date
+        id: mq-check-pr-uptodate
+        uses: reside-eng/workflow-templates-library/.github/actions/mq-check-uptodate@v1
+        with:
+          github-token: ${{ github.token }}
+          pr-number: ${{ env.PR_NUMBER }}
+
       - name: Use Node.js ${{ env.NODE_VERSION }}
+        if: env.IN_MERGE_QUEUE != 'true' || env.PR_UPTODATE != 'true'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
 
       - name: Install dependencies
+        if: env.IN_MERGE_QUEUE != 'true' || env.PR_UPTODATE != 'true'
         run: yarn install --immutable
 
       - name: Check
+        if: env.IN_MERGE_QUEUE != 'true' || env.PR_UPTODATE != 'true'
         run: yarn check
 
       - name: Type check
+        if: env.IN_MERGE_QUEUE != 'true' || env.PR_UPTODATE != 'true'
         run: yarn types:check
 
       - name: Test
+        if: env.IN_MERGE_QUEUE != 'true' || env.PR_UPTODATE != 'true'
         run: yarn test:cov
 
       - name: Upload coverage to Coveralls
+        if: env.IN_MERGE_QUEUE != 'true' || env.PR_UPTODATE != 'true'
         uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
+        if: env.IN_MERGE_QUEUE != 'true' || env.PR_UPTODATE != 'true'
         run: yarn build
